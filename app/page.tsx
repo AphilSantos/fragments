@@ -277,10 +277,6 @@ export default function Home() {
           className={`flex flex-col w-full max-h-full max-w-[800px] mx-auto px-4 overflow-auto ${fragment ? 'col-span-1' : 'col-span-2'}`}
         >
           <NavBar
-            session={session}
-            showLogin={() => setAuthDialog(true)}
-            signOut={logout}
-            onSocialClick={handleSocialClick}
             onClear={handleClearChat}
             canClear={messages.length > 0}
             canUndo={messages.length > 1 && !isLoading}
