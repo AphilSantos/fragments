@@ -47,6 +47,8 @@ export default function Home() {
   const [isRateLimited, setIsRateLimited] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
   const { session, userTeam } = useAuth(setAuthDialog, setAuthView)
+  const [streamingPhase, setStreamingPhase] = useState<'idle' | 'thinking' | 'coding'>('idle')
+  const [streamingText, setStreamingText] = useState('')
 
   const filteredModels = modelsList.models.filter((model) => {
     if (process.env.NEXT_PUBLIC_HIDE_LOCAL_MODELS) {
@@ -109,26 +111,42 @@ export default function Home() {
 
   useEffect(() => {
     if (object) {
+      // Update streaming phase based on object properties
+      if (object.commentary && !object.code) {
+        setStreamingPhase('thinking')
+        setStreamingText(object.commentary || '')
+      } else if (object.code) {
+        setStreamingPhase('coding')
+        setStreamingText(`Generating ${object.title || 'application'}...`)
+      }
+
+      setMessage({ object })
       setFragment(object)
-      const content: Message['content'] = [
-        { type: 'text', text: object.commentary || '' },
-        { type: 'code', text: object.code || '' },
-      ]
+      setResult(undefined)
+      setIsPreviewLoading(true)
 
-      if (!lastMessage || lastMessage.role !== 'assistant') {
-        addMessage({
-          role: 'assistant',
-          content,
-          object,
+      const executeFragment = async () => {
+        const response = await fetch('/api/sandbox', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            fragment: object,
+            userID: session?.user?.id,
+            teamID: userTeam?.id,
+          }),
         })
+
+        if (response.ok) {
+          const result = await response.json()
+          console.log('result', result)
+          setResult(result)
+          setMessage({ result })
+        }
+
+        setIsPreviewLoading(false)
       }
 
-      if (lastMessage && lastMessage.role === 'assistant') {
-        setMessage({
-          content,
-          object,
-        })
-      }
+      executeFragment()
     }
   }, [object])
 
@@ -289,7 +307,12 @@ export default function Home() {
           <Chat
             messages={messages}
             isLoading={isLoading}
-            setCurrentPreview={setCurrentPreview}
+            streamingPhase={streamingPhase}
+            streamingText={streamingText}
+            setCurrentPreview={({ fragment, result }) => {
+              setFragment(fragment)
+              setResult(result)
+            }}
           />
           <ChatInput
             retry={retry}

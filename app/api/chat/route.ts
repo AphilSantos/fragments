@@ -69,6 +69,10 @@ export async function POST(req: Request) {
       messages,
       maxRetries: 0, // do not retry on errors
       ...modelParams,
+      onTextChunk: (text) => {
+        // This will be called for each text chunk
+        console.log('Streaming chunk:', text)
+      },
     })
 
     return stream.toTextStreamResponse()

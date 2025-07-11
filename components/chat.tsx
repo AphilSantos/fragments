@@ -8,10 +8,14 @@ import { useEffect } from 'react'
 export function Chat({
   messages,
   isLoading,
+  streamingPhase,
+  streamingText,
   setCurrentPreview,
 }: {
   messages: Message[]
   isLoading: boolean
+  streamingPhase: 'thinking' | 'coding' | 'complete'
+  streamingText: string
   setCurrentPreview: (preview: {
     fragment: DeepPartial<FragmentSchema> | undefined
     result: ExecutionResult | undefined
@@ -75,9 +79,19 @@ export function Chat({
         </div>
       ))}
       {isLoading && (
-        <div className="flex items-center gap-1 text-sm text-muted-foreground">
-          <LoaderIcon strokeWidth={2} className="animate-spin w-4 h-4" />
-          <span>Generating...</span>
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center gap-1 text-sm text-muted-foreground">
+            <LoaderIcon strokeWidth={2} className="animate-spin w-4 h-4" />
+            <span>
+              {streamingPhase === 'thinking' ? 'Analyzing your request...' :
+               streamingPhase === 'coding' ? 'Generating code...' : 'Finalizing...'}
+            </span>
+          </div>
+          {streamingText && (
+            <div className="text-xs text-muted-foreground bg-accent/30 p-2 rounded font-mono max-h-20 overflow-hidden">
+              {streamingText}
+            </div>
+          )}
         </div>
       )}
     </div>

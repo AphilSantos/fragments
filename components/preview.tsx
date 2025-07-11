@@ -128,6 +128,24 @@ export function Preview({
             </TabsContent>
           </div>
         )}
+        {isChatLoading && (
+          <div className="flex items-center justify-center p-8">
+            <div className="flex flex-col items-center gap-4 text-sm text-muted-foreground">
+              <div className="flex items-center gap-2">
+                <LoaderCircle className="w-4 h-4 animate-spin" />
+                <span>AI is crafting your code...</span>
+              </div>
+              <div className="flex gap-1">
+                <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" style={{animationDelay: '0.2s'}}></div>
+                <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" style={{animationDelay: '0.4s'}}></div>
+              </div>
+              <div className="text-xs text-center max-w-sm">
+                This usually takes 5-15 seconds depending on the complexity of your request
+              </div>
+            </div>
+          </div>
+        )}
       </Tabs>
     </div>
   )
