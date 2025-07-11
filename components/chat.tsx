@@ -79,17 +79,18 @@ export function Chat({
         </div>
       ))}
       {isLoading && (
-        <div className="flex flex-col gap-2">
-          <div className="flex items-center gap-1 text-sm text-muted-foreground">
+        <div className="flex flex-col gap-4 bg-accent dark:bg-white/5 border text-accent-foreground dark:text-muted-foreground py-4 px-4 rounded-2xl w-full font-serif">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <LoaderIcon strokeWidth={2} className="animate-spin w-4 h-4" />
             <span>
-              {streamingPhase === 'thinking' ? 'Analyzing your request...' :
+              {streamingPhase === 'thinking' ? 'AI is thinking...' :
                streamingPhase === 'coding' ? 'Generating code...' : 'Finalizing...'}
             </span>
           </div>
           {streamingText && (
-            <div className="text-xs text-muted-foreground bg-accent/30 p-2 rounded font-mono max-h-20 overflow-hidden">
+            <div className="whitespace-pre-wrap text-sm">
               {streamingText}
+              <span className="animate-pulse">|</span>
             </div>
           )}
         </div>

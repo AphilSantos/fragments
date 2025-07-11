@@ -111,13 +111,20 @@ export default function Home() {
 
   useEffect(() => {
     if (object) {
-      // Update streaming phase based on object properties
+      // Update streaming phase and text based on what's being generated
       if (object.commentary && !object.code) {
         setStreamingPhase('thinking')
         setStreamingText(object.commentary || '')
+      } else if (object.code && object.commentary) {
+        setStreamingPhase('coding')
+        // Show the code being generated with syntax highlighting context
+        const codePreview = object.code.length > 200 
+          ? object.code.substring(0, 200) + '...\n\n[Code continues...]'
+          : object.code
+        setStreamingText(`Commentary: ${object.commentary}\n\n--- Code ---\n${codePreview}`)
       } else if (object.code) {
         setStreamingPhase('coding')
-        setStreamingText(`Generating ${object.title || 'application'}...`)
+        setStreamingText(object.code)
       }
 
       setMessage({ object })
@@ -153,6 +160,13 @@ export default function Home() {
   useEffect(() => {
     if (error) stop()
   }, [error])
+
+  useEffect(() => {
+    if (!isLoading) {
+      setStreamingPhase('idle')
+      setStreamingText('')
+    }
+  }, [isLoading])
 
   function setMessage(message: Partial<Message>, index?: number) {
     setMessages((previousMessages) => {
