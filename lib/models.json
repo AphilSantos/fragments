@@ -6,6 +6,20 @@
       "providerId": "openrouter",
       "name": "Claude 3.5 Sonnet",
       "multiModal": true
+    },
+    {
+      "id": "x-ai/grok-4",
+      "provider": "OpenRouter",
+      "providerId": "openrouter",
+      "name": "Grok 4",
+      "multiModal": true
+    },
+    {
+      "id": "anthropic/claude-3.7-sonnet:thinking",
+      "provider": "OpenRouter",
+      "providerId": "openrouter",
+      "name": "Claude 3.7 Sonnet (Thinking)",
+      "multiModal": true
     }
   ]
 }
