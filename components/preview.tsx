@@ -128,43 +128,6 @@ export function Preview({
             </TabsContent>
           </div>
         )}
-        {isChatLoading && fragment && (
-          <div className="p-4 h-full overflow-auto">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
-              <LoaderCircle className="w-4 h-4 animate-spin" />
-              <span>Generating code...</span>
-            </div>
-            {fragment.code && (
-              <div className="font-mono text-sm bg-gray-50 dark:bg-gray-900 p-4 rounded-lg border">
-                <pre className="whitespace-pre-wrap">
-                  {fragment.code}
-                  <span className="animate-pulse text-blue-500">|</span>
-                </pre>
-              </div>
-            )}
-            {fragment.commentary && !fragment.code && (
-              <div className="text-sm text-muted-foreground bg-accent/20 p-4 rounded-lg">
-                {fragment.commentary}
-                <span className="animate-pulse">|</span>
-              </div>
-            )}
-          </div>
-        )}
-        {isChatLoading && !fragment && (
-          <div className="flex items-center justify-center p-8">
-            <div className="flex flex-col items-center gap-4 text-sm text-muted-foreground">
-              <div className="flex items-center gap-2">
-                <LoaderCircle className="w-4 h-4 animate-spin" />
-                <span>AI is analyzing your request...</span>
-              </div>
-              <div className="flex gap-1">
-                <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
-                <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" style={{animationDelay: '0.2s'}}></div>
-                <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" style={{animationDelay: '0.4s'}}></div>
-              </div>
-            </div>
-          </div>
-        )}
       </Tabs>
     </div>
   )

@@ -47,8 +47,6 @@ export default function Home() {
   const [isRateLimited, setIsRateLimited] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
   const { session, userTeam } = useAuth(setAuthDialog, setAuthView)
-  const [streamingPhase, setStreamingPhase] = useState<'idle' | 'thinking' | 'coding'>('idle')
-  const [streamingText, setStreamingText] = useState('')
 
   const filteredModels = modelsList.models.filter((model) => {
     if (process.env.NEXT_PUBLIC_HIDE_LOCAL_MODELS) {
@@ -71,14 +69,11 @@ export default function Home() {
     schema,
     onError: (error) => {
       console.error('Error submitting request:', error)
-      if (error.message.includes('limit') || error.message.includes('Rate limit')) {
+      if (error.message.includes('limit')) {
         setIsRateLimited(true)
-        setErrorMessage('Rate limit exceeded. Please try again in a moment.')
-      } else if (error.message.includes('JSON')) {
-        setErrorMessage('Connection interrupted. Please try again.')
-      } else {
-        setErrorMessage(error.message)
       }
+
+      setErrorMessage(error.message)
     },
     onFinish: async ({ object: fragment, error }) => {
       if (!error) {
@@ -114,74 +109,32 @@ export default function Home() {
 
   useEffect(() => {
     if (object) {
-      // Update streaming phase and text based on what's being generated
-      if (object.commentary && !object.code) {
-        setStreamingPhase('thinking')
-        setStreamingText(object.commentary || '')
-      } else if (object.code && object.commentary) {
-        setStreamingPhase('coding')
-        // Show the code being generated with syntax highlighting context
-        const codePreview = object.code.length > 200 
-          ? object.code.substring(0, 200) + '...\n\n[Code continues...]'
-          : object.code
-        setStreamingText(`Commentary: ${object.commentary}\n\n--- Code ---\n${codePreview}`)
-      } else if (object.code) {
-        setStreamingPhase('coding')
-        setStreamingText(object.code)
-      }
-
-      setMessage({ object })
       setFragment(object)
-      setResult(undefined)
-      setIsPreviewLoading(true)
+      const content: Message['content'] = [
+        { type: 'text', text: object.commentary || '' },
+        { type: 'code', text: object.code || '' },
+      ]
 
-      const executeFragment = async () => {
-        try {
-          const response = await fetch('/api/sandbox', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              fragment: object,
-              userID: session?.user?.id,
-              teamID: userTeam?.id,
-            }),
-          })
-
-          if (response.ok) {
-            const result = await response.json()
-            console.log('result', result)
-            setResult(result)
-            setMessage({ result })
-          } else if (response.status === 500) {
-            // Handle rate limit or other server errors
-            const errorText = await response.text()
-            console.error('Sandbox error:', errorText)
-            if (errorText.includes('Rate limit')) {
-              setErrorMessage('Sandbox creation is rate limited. The code was generated successfully.')
-            }
-          }
-        } catch (error) {
-          console.error('Sandbox execution error:', error)
-          setErrorMessage('Failed to create sandbox. The code was generated successfully.')
-        }
-
-        setIsPreviewLoading(false)
+      if (!lastMessage || lastMessage.role !== 'assistant') {
+        addMessage({
+          role: 'assistant',
+          content,
+          object,
+        })
       }
 
-      executeFragment()
+      if (lastMessage && lastMessage.role === 'assistant') {
+        setMessage({
+          content,
+          object,
+        })
+      }
     }
   }, [object])
 
   useEffect(() => {
     if (error) stop()
   }, [error])
-
-  useEffect(() => {
-    if (!isLoading) {
-      setStreamingPhase('idle')
-      setStreamingText('')
-    }
-  }, [isLoading])
 
   function setMessage(message: Partial<Message>, index?: number) {
     setMessages((previousMessages) => {
@@ -336,12 +289,7 @@ export default function Home() {
           <Chat
             messages={messages}
             isLoading={isLoading}
-            streamingPhase={streamingPhase}
-            streamingText={streamingText}
-            setCurrentPreview={({ fragment, result }) => {
-              setFragment(fragment)
-              setResult(result)
-            }}
+            setCurrentPreview={setCurrentPreview}
           />
           <ChatInput
             retry={retry}
