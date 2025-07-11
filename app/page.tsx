@@ -71,11 +71,14 @@ export default function Home() {
     schema,
     onError: (error) => {
       console.error('Error submitting request:', error)
-      if (error.message.includes('limit')) {
+      if (error.message.includes('limit') || error.message.includes('Rate limit')) {
         setIsRateLimited(true)
+        setErrorMessage('Rate limit exceeded. Please try again in a moment.')
+      } else if (error.message.includes('JSON')) {
+        setErrorMessage('Connection interrupted. Please try again.')
+      } else {
+        setErrorMessage(error.message)
       }
-
-      setErrorMessage(error.message)
     },
     onFinish: async ({ object: fragment, error }) => {
       if (!error) {
@@ -133,21 +136,33 @@ export default function Home() {
       setIsPreviewLoading(true)
 
       const executeFragment = async () => {
-        const response = await fetch('/api/sandbox', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            fragment: object,
-            userID: session?.user?.id,
-            teamID: userTeam?.id,
-          }),
-        })
+        try {
+          const response = await fetch('/api/sandbox', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              fragment: object,
+              userID: session?.user?.id,
+              teamID: userTeam?.id,
+            }),
+          })
 
-        if (response.ok) {
-          const result = await response.json()
-          console.log('result', result)
-          setResult(result)
-          setMessage({ result })
+          if (response.ok) {
+            const result = await response.json()
+            console.log('result', result)
+            setResult(result)
+            setMessage({ result })
+          } else if (response.status === 500) {
+            // Handle rate limit or other server errors
+            const errorText = await response.text()
+            console.error('Sandbox error:', errorText)
+            if (errorText.includes('Rate limit')) {
+              setErrorMessage('Sandbox creation is rate limited. The code was generated successfully.')
+            }
+          }
+        } catch (error) {
+          console.error('Sandbox execution error:', error)
+          setErrorMessage('Failed to create sandbox. The code was generated successfully.')
         }
 
         setIsPreviewLoading(false)
